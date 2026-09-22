@@ -3,14 +3,14 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
+    android:background="@color/bg_card"
     android:paddingEnd="8dp">
 
-    <!-- Цветная полоса слева: зелёный = норма, красный = повышено, синий = понижено -->
     <View
         android:id="@+id/colorBar"
         android:layout_width="4dp"
         android:layout_height="match_parent"
-        android:background="#2E7D32"/>
+        android:background="@color/bp_normal"/>
 
     <TextView
         android:id="@+id/tvItem"
