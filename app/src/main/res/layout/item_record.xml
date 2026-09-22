@@ -5,12 +5,12 @@
     android:orientation="horizontal"
     android:paddingEnd="8dp">
 
-    <!-- Цветная полоса слева: синяя = утро, красная = вечер -->
+    <!-- Цветная полоса слева: зелёный = норма, красный = повышено, синий = понижено -->
     <View
         android:id="@+id/colorBar"
         android:layout_width="4dp"
         android:layout_height="match_parent"
-        android:background="#1565C0"/>
+        android:background="#2E7D32"/>
 
     <TextView
         android:id="@+id/tvItem"
