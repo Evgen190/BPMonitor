@@ -24,11 +24,20 @@ jobs:
           gradle-version: 8.4
           cache-disabled: true
 
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          echo "KEYSTORE_PATH=$PWD/release.keystore" >> $GITHUB_ENV
+
       - name: Generate Gradle Wrapper
         run: gradle wrapper --gradle-version 8.4 --distribution-type all
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
