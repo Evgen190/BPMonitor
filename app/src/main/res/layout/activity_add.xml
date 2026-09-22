@@ -1,54 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:padding="16dp"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:background="@color/bg_main"
-    android:layout_width="match_parent" android:layout_height="wrap_content">
-
-    <TextView
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="Например: 120/80 70"
-        android:textColor="@color/text_primary"
-        android:textSize="13sp" android:alpha="0.7"/>
+    android:fillViewport="true">
 
     <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="center_vertical">
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:padding="24dp">
+
+        <!-- ───────────── Блок 1: дата и время ───────────── -->
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDateTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Укажите дату и время"
+            android:textSize="16sp"
+            android:textColor="@color/text_primary"
+            android:backgroundTint="@color/bg_header"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            app:cornerRadius="24dp"/>
+
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"/>
+
+        <!-- ───────────── Разделитель ───────────── -->
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="28dp"
+            android:background="@color/bg_header"/>
+
+        <!-- ───────────── Блок 2: показатели ───────────── -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Укажите верхнее / нижнее давление и пульс через пробел.\nНапример: 120 80 55"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:alpha="0.85"/>
 
         <EditText
             android:id="@+id/etInput"
-            android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="120/80 70"
+            android:layout_width="220dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:hint="120 80 55"
+            android:gravity="center"
             android:textColor="@color/text_primary"
             android:textColorHint="#9E9E9E"
             android:inputType="text"
             android:imeOptions="actionDone"
             android:maxLines="1"
-            android:textSize="18sp"/>
+            android:textSize="24sp"/>
 
-        <Spinner
-            android:id="@+id/spPeriod"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"/>
+        <!-- ───────────── Зелёная круглая кнопка ОК ───────────── -->
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSave"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:backgroundTint="@color/bg_header"
-            android:textColor="@color/text_primary"
-            android:text="OK"/>
-    </LinearLayout>
+            android:layout_width="84dp"
+            android:layout_height="84dp"
+            android:layout_marginTop="32dp"
+            android:text="OK"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#2E7D32"
+            app:cornerRadius="42dp"/>
 
-    <TextView
-        android:id="@+id/tvTime"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:layout_marginTop="8dp"
-        android:textSize="14sp"
-        android:textColor="@color/text_primary"
-        android:alpha="0.8"
-        android:background="?android:attr/selectableItemBackground"/>
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>
