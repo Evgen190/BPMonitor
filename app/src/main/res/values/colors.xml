@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Бежевая палитра -->
+    <color name="bg_main">#FAF3E0</color>       <!-- основной фон -->
+    <color name="bg_card">#FFFDF7</color>       <!-- фон строки -->
+    <color name="bg_header">#EFE4D0</color>     <!-- фон заголовка дня -->
+    <color name="text_header">#6D4C41</color>   <!-- текст заголовка -->
+    <color name="text_primary">#3E2723</color>  <!-- основной текст -->
+
+    <!-- Цвета уровня давления (синяя/зелёная/красная полоса) -->
+    <color name="bp_low">#1976D2</color>
+    <color name="bp_normal">#2E7D32</color>
+    <color name="bp_high">#C62828</color>
+</resources>
