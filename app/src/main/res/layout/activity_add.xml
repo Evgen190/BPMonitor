@@ -1,42 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:padding="16dp"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+    android:background="@color/bg_main"
+    android:layout_width="match_parent" android:layout_height="wrap_content">
 
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="Систолическое (верхнее)"/>
-    <EditText android:id="@+id/etSys" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:inputType="number"/>
-
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="Диастолическое (нижнее)"/>
-    <EditText android:id="@+id/etDia" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:inputType="number"/>
-
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="Пульс"/>
-    <EditText android:id="@+id/etPulse" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:inputType="number"/>
-
-    <RadioGroup android:id="@+id/rgPeriod" android:orientation="horizontal"
-        android:layout_width="match_parent" android:layout_height="wrap_content">
-        <RadioButton android:id="@+id/rbMorning"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Утро" android:checked="true"/>
-        <RadioButton android:id="@+id/rbEvening"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Вечер"/>
-    </RadioGroup>
-
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" android:text="Дата и время (нажмите для изменения)"/>
-    <TextView android:id="@+id/tvTime"
+    <TextView
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:padding="12dp" android:textSize="18sp"
+        android:text="Например: 120/80 70"
+        android:textColor="@color/text_primary"
+        android:textSize="13sp" android:alpha="0.7"/>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/etInput"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="120/80 70"
+            android:textColor="@color/text_primary"
+            android:textColorHint="#9E9E9E"
+            android:inputType="text"
+            android:imeOptions="actionDone"
+            android:maxLines="1"
+            android:textSize="18sp"/>
+
+        <Spinner
+            android:id="@+id/spPeriod"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSave"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="@color/bg_header"
+            android:textColor="@color/text_primary"
+            android:text="OK"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvTime"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:layout_marginTop="8dp"
+        android:textSize="14sp"
+        android:textColor="@color/text_primary"
+        android:alpha="0.8"
         android:background="?android:attr/selectableItemBackground"/>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnSave"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" android:text="Сохранить"/>
 </LinearLayout>
