@@ -1,3 +1,8 @@
 <resources>
-    <style name="Theme.BPMonitor" parent="Theme.MaterialComponents.DayNight.NoActionBar"/>
+    <style name="Theme.BPMonitor" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:windowBackground">@color/bg_main</item>
+        <item name="android:statusBarColor">@color/bg_header</item>
+        <item name="android:navigationBarColor">@color/bg_header</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
 </resources>
