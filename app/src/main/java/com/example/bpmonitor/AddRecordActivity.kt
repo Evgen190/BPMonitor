@@ -19,50 +19,49 @@ class AddRecordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add)
 
-        val etInput  = findViewById<EditText>(R.id.etInput)
-        val spPeriod = findViewById<Spinner>(R.id.spPeriod)
-        val tvTime   = findViewById<TextView>(R.id.tvTime)
-        val btnSave  = findViewById<MaterialButton>(R.id.btnSave)
+        val etInput     = findViewById<EditText>(R.id.etInput)
+        val btnDateTime = findViewById<MaterialButton>(R.id.btnDateTime)
+        val tvTime      = findViewById<TextView>(R.id.tvTime)
+        val btnSave     = findViewById<MaterialButton>(R.id.btnSave)
 
-        val fmt = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+        val fmt = SimpleDateFormat("dd.MM.yyyy   HH:mm", Locale.getDefault())
         fun refreshTime() { tvTime.text = fmt.format(Date(timestamp)) }
         refreshTime()
 
-        // Спиннер: Утро / Вечер. По умолчанию — по текущему часу
-        spPeriod.adapter = ArrayAdapter(this,
-            android.R.layout.simple_spinner_dropdown_item, listOf("Утро", "Вечер"))
-        spPeriod.setSelection(
-            if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) < 12) 0 else 1)
-
-        // Тап по времени — диалог даты и времени
-        tvTime.setOnClickListener {
+        // Тап по кнопке «Укажите дату и время» — сначала дата, потом время
+        btnDateTime.setOnClickListener {
             val cal = Calendar.getInstance().apply { timeInMillis = timestamp }
             DatePickerDialog(this, { _, y, m, d ->
                 cal.set(y, m, d)
                 TimePickerDialog(this, { _, h, min ->
                     cal.set(Calendar.HOUR_OF_DAY, h); cal.set(Calendar.MINUTE, min)
-                    timestamp = cal.timeInMillis; refreshTime()
+                    timestamp = cal.timeInMillis
+                    refreshTime()
                 }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
                cal.get(Calendar.DAY_OF_MONTH)).show()
         }
 
-        btnSave.setOnClickListener { save(etInput, spPeriod) }
+        btnSave.setOnClickListener { save(etInput) }
 
-        // Enter на клавиатуре = сохранить
+        // Enter на клавиатуре = то же, что нажать ОК
         etInput.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) { save(etInput, spPeriod); true }
-            else false
+            if (actionId == EditorInfo.IME_ACTION_DONE) { save(etInput); true } else false
         }
     }
 
-    private fun save(etInput: EditText, spPeriod: Spinner) {
+    private fun save(etInput: EditText) {
         val (sys, dia, pulse) = parse(etInput.text.toString())
         if (sys == null || dia == null) {
-            Toast.makeText(this, "Формат: 120/80 или 120/80 70", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Формат: 120 80 55", Toast.LENGTH_SHORT).show()
             return
         }
-        val period = if (spPeriod.selectedItemPosition == 0) "morning" else "evening"
+        // Период определяется автоматически по времени измерения.
+        // Пользователь его не видит — используется только для отчётов и группировки.
+        val hour = Calendar.getInstance().apply { timeInMillis = timestamp }
+            .get(Calendar.HOUR_OF_DAY)
+        val period = if (hour < 12) "morning" else "evening"
+
         lifecycleScope.launch {
             AppDatabase.get(this@AddRecordActivity).bpDao().insert(
                 BpRecord(systolic = sys, diastolic = dia, pulse = pulse ?: 0,
@@ -71,10 +70,10 @@ class AddRecordActivity : AppCompatActivity() {
         }
     }
 
-    /** Принимает "120/80", "120/80 70", "120 80 70", "120,80,70". */
+    /** Принимает "120 80 55", "120/80 55", "120,80,55" — любой разделитель. */
     private fun parse(raw: String): Triple<Int?, Int?, Int?> {
-        val cleaned = raw.replace(',', '/').trim()
-        val parts = cleaned.split(Regex("[/\\s]+")).filter { it.isNotEmpty() }
+        val cleaned = raw.replace(',', ' ').replace('/', ' ').trim()
+        val parts = cleaned.split(Regex("\\s+")).filter { it.isNotEmpty() }
         if (parts.size < 2) return Triple(null, null, null)
         return Triple(
             parts[0].toIntOrNull(),
