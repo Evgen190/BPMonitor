@@ -4,7 +4,8 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:background="@color/bg_card"
-    android:paddingEnd="8dp">
+    android:paddingEnd="8dp"
+    android:gravity="center_vertical">
 
     <View
         android:id="@+id/colorBar"
@@ -19,10 +20,35 @@
         android:layout_weight="1"
         android:paddingStart="10dp"
         android:paddingEnd="6dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
         android:singleLine="true"
         android:ellipsize="end"
         android:fontFamily="monospace"
         android:textSize="15sp"/>
+
+    <TextView
+        android:id="@+id/tvAlcohol"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:gravity="center"
+        android:text="А"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/bg_circle_alcohol"
+        android:layout_marginEnd="4dp"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/tvHookah"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:gravity="center"
+        android:text="К"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/bg_circle_hookah"
+        android:visibility="gone"/>
 </LinearLayout>
