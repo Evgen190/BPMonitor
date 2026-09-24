@@ -4,8 +4,18 @@
     android:background="@color/bg_main"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
-    <Spinner android:id="@+id/spinner"
-        android:layout_width="match_parent" android:layout_height="wrap_content"/>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <Spinner android:id="@+id/spinnerPeriod"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+
+        <Spinner android:id="@+id/spinnerView"
+            android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+    </LinearLayout>
 
     <TextView android:id="@+id/tvStats"
         android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -17,4 +27,19 @@
         android:layout_width="match_parent" android:layout_height="0dp"
         android:layout_weight="1"
         android:background="@color/bg_card"/>
+
+    <ScrollView
+        android:id="@+id/calendarScroll"
+        android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1"
+        android:visibility="gone"
+        android:background="@color/bg_card">
+
+        <LinearLayout
+            android:id="@+id/calendarContainer"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"/>
+    </ScrollView>
 </LinearLayout>
