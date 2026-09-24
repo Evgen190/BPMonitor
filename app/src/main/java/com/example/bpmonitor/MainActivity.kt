@@ -51,9 +51,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ──────────────────────────────────────────────────────────────
-    //  Адаптер с двумя типами строк: заголовок дня и измерение
-    // ──────────────────────────────────────────────────────────────
     class Adapter(val onLong: (BpRecord) -> Unit) :
         RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -63,7 +60,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         private var rows: List<Row> = emptyList()
-
         private val timeFmt = SimpleDateFormat("HH:mm", Locale.getDefault())
         private val dayFmt  = SimpleDateFormat("d MMMM yyyy, EEEE", Locale("ru"))
 
@@ -96,16 +92,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         private fun bindItem(h: ItemVH, r: BpRecord) {
-            val color = colorFor(r)
-            val periodLabel = if (r.period == "morning") "У" else "В"
-            val pulse = if (r.pulse > 0) "   п${r.pulse}" else ""
-            h.tv.text = String.format(
-                Locale.getDefault(),
-                "%s  %s  %3d/%2d%s",
-                timeFmt.format(Date(r.timestamp)), periodLabel,
-                r.systolic, r.diastolic, pulse)
-            h.tv.setTextColor(color)
-            h.bar.setBackgroundColor(color)
+            val hasPressure = r.systolic > 0 && r.diastolic > 0
+            val sb = StringBuilder(timeFmt.format(Date(r.timestamp)))
+            if (hasPressure) {
+                sb.append(String.format(Locale.getDefault(),
+                    "   %3d/%2d", r.systolic, r.diastolic))
+                if (r.pulse > 0) sb.append("   п${r.pulse}")
+            } else {
+                sb.append("   —")
+            }
+            h.tv.text = sb.toString()
+            h.tv.setTextColor(if (hasPressure) colorFor(r) else Color.parseColor("#9E9E9E"))
+            h.bar.setBackgroundColor(if (hasPressure) colorFor(r) else Color.parseColor("#BDBDBD"))
+
+            h.tvAlcohol.visibility = if (r.alcohol) View.VISIBLE else View.GONE
+            h.tvHookah.visibility  = if (r.hookah)  View.VISIBLE else View.GONE
+
             h.itemView.setOnLongClickListener { onLong(r); true }
         }
 
@@ -122,16 +124,13 @@ class MainActivity : AppCompatActivity() {
             var lastDay: String? = null
             for (r in records) {
                 val day = dayFmt.format(Date(r.timestamp))
-                if (day != lastDay) {
-                    out.add(Row.Header(day)); lastDay = day
-                }
+                if (day != lastDay) { out.add(Row.Header(day)); lastDay = day }
                 out.add(Row.Item(r))
             }
             rows = out
             notifyDataSetChanged()
         }
 
-        /** Для sticky-заголовка: возвращает текст заголовка по позиции. */
         fun getHeaderTitle(position: Int): String? =
             (rows.getOrNull(position) as? Row.Header)?.title
 
@@ -141,14 +140,11 @@ class MainActivity : AppCompatActivity() {
         class ItemVH(v: View) : RecyclerView.ViewHolder(v) {
             val tv: TextView = v.findViewById(R.id.tvItem)
             val bar: View = v.findViewById(R.id.colorBar)
+            val tvAlcohol: TextView = v.findViewById(R.id.tvAlcohol)
+            val tvHookah: TextView  = v.findViewById(R.id.tvHookah)
         }
     }
 
-    // ──────────────────────────────────────────────────────────────
-    //  Sticky-заголовок без сторонних библиотек.
-    //  Рисует заголовок текущего дня поверх списка вверху.
-    //  Когда наверх подъезжает следующий заголовок — плавно выталкивает.
-    // ──────────────────────────────────────────────────────────────
     class StickyHeaderDecoration(
         private val adapter: Adapter,
         context: Context
@@ -157,11 +153,9 @@ class MainActivity : AppCompatActivity() {
         private val density = context.resources.displayMetrics.density
         private val headerHeight = 26f * density
 
-        private val bgPaint = Paint().apply {
-            color = Color.parseColor("#EFE4D0")   // bg_header из палитры
-        }
+        private val bgPaint = Paint().apply { color = Color.parseColor("#EFE4D0") }
         private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#6D4C41")   // text_header
+            color = Color.parseColor("#6D4C41")
             textSize = 12f * context.resources.displayMetrics.scaledDensity
             typeface = Typeface.DEFAULT_BOLD
         }
@@ -172,38 +166,25 @@ class MainActivity : AppCompatActivity() {
             val topPos = parent.getChildAdapterPosition(topChild)
             if (topPos == RecyclerView.NO_POSITION) return
 
-            // Ищем ближайший заголовок вверх от верхней видимой позиции
             var headerPos = topPos
-            while (headerPos >= 0 && adapter.getItemViewType(headerPos) != Adapter.TYPE_HEADER) {
-                headerPos--
-            }
+            while (headerPos >= 0 && adapter.getItemViewType(headerPos) != Adapter.TYPE_HEADER) headerPos--
             if (headerPos < 0) return
             val title = adapter.getHeaderTitle(headerPos) ?: return
 
-            // Если следующий заголовок подъезжает — сдвигаем текущий вверх
             var yOffset = 0f
             var nextHeaderPos = headerPos + 1
             while (nextHeaderPos < adapter.itemCount &&
-                   adapter.getItemViewType(nextHeaderPos) != Adapter.TYPE_HEADER) {
-                nextHeaderPos++
-            }
+                   adapter.getItemViewType(nextHeaderPos) != Adapter.TYPE_HEADER) nextHeaderPos++
             if (nextHeaderPos < adapter.itemCount) {
                 val nextView = parent.findViewHolderForAdapterPosition(nextHeaderPos)?.itemView
-                if (nextView != null && nextView.top < headerHeight) {
-                    yOffset = nextView.top - headerHeight
-                }
+                if (nextView != null && nextView.top < headerHeight) yOffset = nextView.top - headerHeight
             }
 
             c.save()
             c.translate(0f, yOffset)
-
-            // Фон заголовка
             c.drawRect(0f, 0f, parent.width.toFloat(), headerHeight, bgPaint)
-
-            // Текст (по вертикали центрируем)
             val baseline = headerHeight / 2f - (textPaint.descent() + textPaint.ascent()) / 2f
             c.drawText(title, padding, baseline, textPaint)
-
             c.restore()
         }
     }
