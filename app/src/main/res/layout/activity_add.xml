@@ -13,8 +13,6 @@
         android:gravity="center_horizontal"
         android:padding="24dp">
 
-        <!-- ───────────── Блок 1: дата и время ───────────── -->
-
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDateTime"
             android:layout_width="wrap_content"
@@ -36,16 +34,12 @@
             android:textStyle="bold"
             android:textColor="@color/text_primary"/>
 
-        <!-- ───────────── Разделитель ───────────── -->
-
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="28dp"
             android:layout_marginBottom="28dp"
             android:background="@color/bg_header"/>
-
-        <!-- ───────────── Блок 2: показатели ───────────── -->
 
         <TextView
             android:layout_width="match_parent"
@@ -70,7 +64,72 @@
             android:maxLines="1"
             android:textSize="24sp"/>
 
-        <!-- ───────────── Зелёная круглая кнопка ОК ───────────── -->
+        <!-- ─────── Кружки-события ─────── -->
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:gravity="center">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginEnd="28dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAlcohol"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:text="А"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#B0BEC5"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:cornerRadius="32dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Алкоголь"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnHookah"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:text="К"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#B0BEC5"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    app:cornerRadius="32dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Кальян"
+                    android:textColor="@color/text_primary"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+        </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSave"
@@ -82,7 +141,8 @@
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:backgroundTint="#2E7D32"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
             app:cornerRadius="42dp"/>
-
     </LinearLayout>
 </ScrollView>
