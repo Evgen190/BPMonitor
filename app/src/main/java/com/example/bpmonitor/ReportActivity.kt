@@ -3,7 +3,9 @@ package com.example.bpmonitor
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
+import android.view.GestureDetector
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -20,12 +22,29 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class ReportActivity : AppCompatActivity() {
+
     private lateinit var chart: LineChart
     private lateinit var tvStats: TextView
+    private lateinit var tvMonthTitle: TextView
     private lateinit var calendarContainer: LinearLayout
     private lateinit var calendarScroll: ScrollView
 
-    private var currentPeriod = 0
+    private var showChart = true
+
+    /** Первое число текущего отображаемого месяца (в 00:00). */
+    private val currentMonth: Calendar = Calendar.getInstance().apply {
+        set(Calendar.DAY_OF_MONTH, 1)
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+
+    private lateinit var gestureDetector: GestureDetector
+
+    private val monthFmt = SimpleDateFormat("LLLL yyyy", Locale("ru"))
+    private val dayNumFmt = SimpleDateFormat("d", Locale.getDefault())
+    private val keyFmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,44 +52,76 @@ class ReportActivity : AppCompatActivity() {
 
         chart = findViewById(R.id.chart)
         tvStats = findViewById(R.id.tvStats)
+        tvMonthTitle = findViewById(R.id.tvMonthTitle)
         calendarContainer = findViewById(R.id.calendarContainer)
         calendarScroll = findViewById(R.id.calendarScroll)
 
-        val spinnerPeriod = findViewById<Spinner>(R.id.spinnerPeriod)
-        spinnerPeriod.adapter = ArrayAdapter(this,
-            android.R.layout.simple_spinner_dropdown_item,
-            listOf("Месяц", "Квартал", "Год"))
-        spinnerPeriod.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                currentPeriod = pos; load()
-            }
-            override fun onNothingSelected(p: AdapterView<*>?) {}
-        }
-
+        // Переключатель График / Календарь
         val spinnerView = findViewById<Spinner>(R.id.spinnerView)
         spinnerView.adapter = ArrayAdapter(this,
             android.R.layout.simple_spinner_dropdown_item,
             listOf("График", "Календарь"))
         spinnerView.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                val showChart = pos == 0
+                showChart = pos == 0
                 chart.visibility = if (showChart) View.VISIBLE else View.GONE
                 calendarScroll.visibility = if (showChart) View.GONE else View.VISIBLE
                 load()
             }
             override fun onNothingSelected(p: AdapterView<*>?) {}
         }
+
+        // Жесты свайпа
+        gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDown(e: MotionEvent): Boolean = true
+            override fun onFling(
+                e1: MotionEvent?, e2: MotionEvent,
+                velocityX: Float, velocityY: Float
+            ): Boolean {
+                if (e1 == null) return false
+                val dx = e2.x - e1.x
+                val dy = e2.y - e1.y
+                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 80f) {
+                    if (dx < 0) nextMonth() else prevMonth()
+                    return true
+                }
+                return false
+            }
+        })
+
+        updateMonthTitle()
+        load()
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (::gestureDetector.isInitialized) gestureDetector.onTouchEvent(ev)
+        return super.dispatchTouchEvent(ev)
+    }
+
+    private fun nextMonth() {
+        currentMonth.add(Calendar.MONTH, 1)
+        updateMonthTitle()
+        load()
+    }
+
+    private fun prevMonth() {
+        currentMonth.add(Calendar.MONTH, -1)
+        updateMonthTitle()
+        load()
+    }
+
+    private fun updateMonthTitle() {
+        val raw = monthFmt.format(currentMonth.time)   // "октябрь 2026"
+        tvMonthTitle.text = raw.replaceFirstChar { it.uppercase() }
     }
 
     private fun periodRange(): Pair<Long, Long> {
-        val cal = Calendar.getInstance()
-        val to = cal.timeInMillis
-        when (currentPeriod) {
-            0 -> cal.add(Calendar.MONTH, -1)
-            1 -> cal.add(Calendar.MONTH, -3)
-            else -> cal.add(Calendar.YEAR, -1)
+        val from = currentMonth.timeInMillis
+        val endCal = (currentMonth.clone() as Calendar).apply {
+            add(Calendar.MONTH, 1)
+            add(Calendar.MILLISECOND, -1)
         }
-        return Pair(cal.timeInMillis, to)
+        return Pair(from, endCal.timeInMillis)
     }
 
     private fun load() {
@@ -78,17 +129,18 @@ class ReportActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val list = AppDatabase.get(this@ReportActivity).bpDao().getRange(from, to)
             showStats(list)
-            if (chart.visibility == View.VISIBLE) drawChart(list)
-            else drawCalendar(from, to, list)
+            if (showChart) drawChart(list) else drawCalendar(list)
         }
     }
 
-    // ───────────────── График ─────────────────
+    // ───────────── График ─────────────
 
     private fun drawChart(list: List<BpRecord>) {
         val pressure = list.filter { it.systolic > 0 && it.diastolic > 0 }
         if (pressure.isEmpty()) {
-            chart.clear(); chart.invalidate(); return
+            chart.clear()
+            chart.invalidate()
+            return
         }
 
         val sys = pressure.mapIndexed { i, r -> Entry(i.toFloat(), r.systolic.toFloat()) }
@@ -106,10 +158,8 @@ class ReportActivity : AppCompatActivity() {
             lineDs(pul, "Пульс", Color.parseColor("#388E3C"))
         )
 
-        // Максимум по Y, чтобы рисовать метки сверху
         val maxY = pressure.maxOf { maxOf(it.systolic, it.pulse) } + 15f
 
-        // Метки событий: индекс = позиция в pressure по времени
         val alcoholEntries = ArrayList<Entry>()
         val hookahEntries  = ArrayList<Entry>()
         pressure.forEachIndexed { i, r ->
@@ -145,12 +195,11 @@ class ReportActivity : AppCompatActivity() {
         chart.invalidate()
     }
 
-    // ───────────────── Календарь ─────────────────
+    // ───────────── Календарь одного месяца ─────────────
 
-    private fun drawCalendar(from: Long, to: Long, list: List<BpRecord>) {
+    private fun drawCalendar(list: List<BpRecord>) {
         calendarContainer.removeAllViews()
 
-        val keyFmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         data class Marks(var a: Boolean = false, var h: Boolean = false)
         val dayMap = HashMap<String, Marks>()
         for (r in list) {
@@ -182,20 +231,19 @@ class ReportActivity : AppCompatActivity() {
         }
         calendarContainer.addView(headerRow)
 
-        // Сетка
-        val cur = Calendar.getInstance().apply {
-            timeInMillis = from
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-            set(Calendar.DAY_OF_MONTH, 1)
-            val dow = get(Calendar.DAY_OF_WEEK)
+        // Первая ячейка сетки — понедельник недели, в которую попадает 1-е число месяца
+        val cellCal = (currentMonth.clone() as Calendar).apply {
+            val dow = get(Calendar.DAY_OF_WEEK)             // 1 = Sun..7 = Sat
             val offset = if (dow == Calendar.SUNDAY) -6 else -(dow - 2)
             add(Calendar.DAY_OF_MONTH, offset)
         }
-        val dayFmt = SimpleDateFormat("d", Locale.getDefault())
-        val endCal = Calendar.getInstance().apply { timeInMillis = to }
 
-        while (cur.timeInMillis <= endCal.timeInMillis) {
+        // Последний день месяца — для остановки
+        val endCal = (currentMonth.clone() as Calendar).apply {
+            set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH))
+        }
+
+        while (cellCal.timeInMillis <= endCal.timeInMillis) {
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
@@ -203,34 +251,63 @@ class ReportActivity : AppCompatActivity() {
                     LinearLayout.LayoutParams.WRAP_CONTENT)
             }
             for (i in 0 until 7) {
-                val dayNum = dayFmt.format(cur.time)
-                val key = keyFmt.format(cur.time)
+                val inMonth = cellCal.get(Calendar.MONTH) == currentMonth.get(Calendar.MONTH)
+                val dayNum = dayNumFmt.format(cellCal.time)
+                val key = keyFmt.format(cellCal.time)
                 val m = dayMap[key]
 
                 val cell = TextView(this).apply {
                     text = dayNum
                     gravity = Gravity.CENTER
                     textSize = 14f
-                    setTextColor(Color.parseColor("#3E2723"))
                     layoutParams = LinearLayout.LayoutParams(0, dp(44), 1f)
                     setPadding(4, 4, 4, 4)
-                    // лёгкая рамка для всех
+                    setTextColor(if (inMonth) Color.parseColor("#3E2723")
+                                 else Color.parseColor("#BDBDBD"))
                     background = frameDrawable()
                 }
 
-                when {
-                    m == null -> { /* без заливки */ }
-                    m.a && m.h -> cell.background = splitDrawable()
-                    m.a -> cell.background = solidDrawable("#FFB74D")
-                    m.h -> cell.background = solidDrawable("#CE93D8")
+                if (inMonth) {
+                    when {
+                        m == null -> {}
+                        m.a && m.h -> cell.background = splitDrawable()
+                        m.a -> cell.background = solidDrawable("#FFB74D")
+                        m.h -> cell.background = solidDrawable("#CE93D8")
+                    }
                 }
 
                 row.addView(cell)
-                cur.add(Calendar.DAY_OF_MONTH, 1)
+                cellCal.add(Calendar.DAY_OF_MONTH, 1)
             }
             calendarContainer.addView(row)
         }
     }
+
+    // ───────────── Статистика ─────────────
+
+    private fun showStats(list: List<BpRecord>) {
+        val pressure = list.filter { it.systolic > 0 && it.diastolic > 0 }
+        val sb = StringBuilder()
+        sb.append("Записей: ${list.size}")
+        if (pressure.isNotEmpty()) {
+            sb.append("  (с давлением: ${pressure.size})\n")
+            sb.append("Среднее: ${pressure.map { it.systolic }.average().toInt()}/" +
+                      "${pressure.map { it.diastolic }.average().toInt()} мм рт.ст.\n")
+            sb.append("Сист.: ${pressure.minOf { it.systolic }}–${pressure.maxOf { it.systolic }}   ")
+            sb.append("Диаст.: ${pressure.minOf { it.diastolic }}–${pressure.maxOf { it.diastolic }}")
+        } else {
+            sb.append("\nИзмерений давления за месяц нет")
+        }
+        val alcoDays   = list.filter { it.alcohol }.map { keyFmt.format(Date(it.timestamp)) }.toSet()
+        val hookahDays = list.filter { it.hookah  }.map { keyFmt.format(Date(it.timestamp)) }.toSet()
+        val bothDays   = alcoDays intersect hookahDays
+        sb.append("\nАлкоголь: ${alcoDays.size} дн.   ")
+        sb.append("Кальян: ${hookahDays.size} дн.   ")
+        sb.append("Оба: ${bothDays.size} дн.")
+        tvStats.text = sb.toString()
+    }
+
+    // ───────────── Вспомогательные ─────────────
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 
@@ -254,38 +331,5 @@ class ReportActivity : AppCompatActivity() {
         )
         gd.cornerRadius = dp(6).toFloat()
         return gd
-    }
-
-    // ───────────────── Статистика ─────────────────
-
-    private fun showStats(list: List<BpRecord>) {
-        val pressure = list.filter { it.systolic > 0 && it.diastolic > 0 }
-
-        val sb = StringBuilder()
-        sb.append("Записей всего: ${list.size}\n")
-
-        if (pressure.isNotEmpty()) {
-            sb.append("С давлением: ${pressure.size}\n")
-            sb.append("Среднее: ${pressure.map { it.systolic }.average().toInt()}/" +
-                      "${pressure.map { it.diastolic }.average().toInt()} мм рт.ст.\n")
-            sb.append("Сист.: мин ${pressure.minOf { it.systolic }}, " +
-                      "макс ${pressure.maxOf { it.systolic }}\n")
-            sb.append("Диаст.: мин ${pressure.minOf { it.diastolic }}, " +
-                      "макс ${pressure.maxOf { it.diastolic }}\n")
-        } else {
-            sb.append("Измерений давления за период нет\n")
-        }
-
-        // Дни событий (уникальные даты)
-        val dayFmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val alcoDays   = list.filter { it.alcohol }.map { dayFmt.format(Date(it.timestamp)) }.toSet()
-        val hookahDays = list.filter { it.hookah  }.map { dayFmt.format(Date(it.timestamp)) }.toSet()
-        val bothDays   = alcoDays intersect hookahDays
-
-        sb.append("\nАлкоголь: ${alcoDays.size} дн.\n")
-        sb.append("Кальян: ${hookahDays.size} дн.\n")
-        sb.append("Оба в один день: ${bothDays.size} дн.")
-
-        tvStats.text = sb.toString()
     }
 }
