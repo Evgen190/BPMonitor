@@ -4,30 +4,41 @@
     android:background="@color/bg_main"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
+    <!-- Верхняя строка: название месяца + переключатель График/Календарь -->
     <LinearLayout
         android:orientation="horizontal"
-        android:layout_width="match_parent" android:layout_height="wrap_content">
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical">
 
-        <Spinner android:id="@+id/spinnerPeriod"
+        <TextView
+            android:id="@+id/tvMonthTitle"
             android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:text="Месяц Год"/>
 
-        <Spinner android:id="@+id/spinnerView"
-            android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1"/>
+        <Spinner
+            android:id="@+id/spinnerView"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
     </LinearLayout>
 
-    <TextView android:id="@+id/tvStats"
+    <!-- Статистика за месяц -->
+    <TextView
+        android:id="@+id/tvStats"
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:padding="8dp" android:textSize="14sp"
+        android:padding="8dp" android:textSize="13sp"
         android:textColor="@color/text_primary"/>
 
+    <!-- График -->
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/chart"
         android:layout_width="match_parent" android:layout_height="0dp"
         android:layout_weight="1"
         android:background="@color/bg_card"/>
 
+    <!-- Календарь -->
     <ScrollView
         android:id="@+id/calendarScroll"
         android:layout_width="match_parent" android:layout_height="0dp"
@@ -42,4 +53,14 @@
             android:layout_height="wrap_content"
             android:padding="8dp"/>
     </ScrollView>
+
+    <!-- Подсказка про свайп -->
+    <TextView
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="11sp"
+        android:alpha="0.6"
+        android:textColor="@color/text_primary"
+        android:paddingTop="6dp"
+        android:text="⟵ свайп влево/вправо — соседний месяц ⟶"/>
 </LinearLayout>
